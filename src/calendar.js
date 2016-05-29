@@ -127,31 +127,31 @@ angular.module('ui.calendar', [])
 
                 // Compare newTokens to oldTokens and call onAdded, onRemoved, and onChanged handlers for each affected event respectively.
                 var applyChanges = function (newTokens, oldTokens) {
-                    var i;
-                    var token;
                     var replacedTokens = {};
-                    var removedTokens = subtractAsSets(oldTokens, newTokens);
-                    for (i = 0; i < removedTokens.length; i++) {
-                        var removedToken = removedTokens[i];
-                        var el = map[removedToken];
-                        delete map[removedToken];
-                        var newToken = tokenFn(el);
-                        // if the element wasn't removed but simply got a new token, its old token will be different from the current one
-                        if (newToken === removedToken) {
-                            self.onRemoved(el);
-                        } else {
-                            replacedTokens[newToken] = removedToken;
-                            self.onChanged(el);
+                    //  Removed Tokens
+                    (subtractAsSets(oldTokens, newTokens) || []).forEach(
+                        function (removedToken) {
+                            var el = map[removedToken];
+                            delete map[removedToken];
+                            var newToken = tokenFn(el);
+                            // if the element wasn't removed but simply got a new token, its old token will be different from the current one
+                            if (newToken === removedToken) {
+                                self.onRemoved(el);
+                            } else {
+                                replacedTokens[newToken] = removedToken;
+                                self.onChanged(el);
+                            }
                         }
-                    }
+                    );
 
-                    var addedTokens = subtractAsSets(newTokens, oldTokens);
-                    for (i = 0; i < addedTokens.length; i++) {
-                        token = addedTokens[i];
-                        if (!replacedTokens[token]) {
-                            self.onAdded(map[token]);
+                    //  Added Tokens
+                    (subtractAsSets(newTokens, oldTokens) || []).forEach(
+                        function (addedToken) {
+                            if (!replacedTokens[addedToken]) {
+                                self.onAdded(map[addedToken]);
+                            }
                         }
-                    }
+                    );
                 };
 
                 self = {
@@ -309,12 +309,11 @@ angular.module('ui.calendar', [])
 
                     eventsWatcher.onChanged = function (event) {
                         if (calendar && calendar.fullCalendar) {
-                            var clientEvents = calendar.fullCalendar('clientEvents', event._id);
-                            for (var i = 0; i < clientEvents.length; i++) {
-                                var clientEvent = clientEvents[i];
-                                clientEvent = angular.extend(clientEvent, event);
-                                calendar.fullCalendar('updateEvent', clientEvent);
-                            }
+                            (calendar.fullCalendar('clientEvents', event._id) || []).forEach(
+                                function (clientEvent) {
+                                    calendar.fullCalendar('updateEvent', angular.extend(clientEvent, event));
+                                }
+                            );
                         }
                     };
 
