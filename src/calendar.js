@@ -19,23 +19,6 @@ angular.module('ui.calendar', [])
             var sources = $scope.eventSources;
             var extraEventSignature = $scope.calendarWatchEvent ? $scope.calendarWatchEvent : angular.noop;
 
-            var wrapFunctionWithScopeApply = function (functionToWrap) {
-                return function () {
-                    // This may happen outside of angular context, so create one if outside.
-                    if ($scope.$root.$$phase) {
-                        return functionToWrap.apply(this, arguments);
-                    }
-
-                    var args = arguments;
-                    var that = this;
-                    return $scope.$root.$apply(
-                        function () {
-                            return functionToWrap.apply(that, args);
-                        }
-                    );
-                };
-            };
-
             var eventSerialId = 1;
             // @return {String} fingerprint of the event object and its properties
             this.eventFingerprint = function (e) {
@@ -192,12 +175,6 @@ angular.module('ui.calendar', [])
 
                 angular.extend(config, uiCalendarConfig);
                 angular.extend(config, calendarSettings);
-
-                angular.forEach(config, function (value, key) {
-                    if (typeof value === 'function') {
-                        config[key] = wrapFunctionWithScopeApply(config[key]);
-                    }
-                });
 
                 return config;
             };
